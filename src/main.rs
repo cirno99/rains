@@ -73,7 +73,7 @@ async fn run() -> Result<()> {
                         profile.category,
                         profile.business,
                         profile.business_address,
-                        profile.website.underline(),
+                        profile.website.underline(crossterm::style::Color::Blue),
                         profile.price,
                         profile.pb,
                         profile.pe_ttm,
@@ -339,7 +339,7 @@ fn write_quote(quote: &Quote) {
             _ => now.dark_grey(),
         }
         .bold()
-        .underline(),
+        .underline(crossterm::style::Color::Blue),
         quote.close,
         quote.open,
         quote.high,
