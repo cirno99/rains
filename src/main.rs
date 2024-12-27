@@ -313,11 +313,11 @@ async fn check_symbol(symbol: &str) -> Result<Investment> {
 fn fmt_num(num: &f64) -> String {
     match num {
         _ if *num > 100_000_000.0 => {
-            format!("{:.2}亿", num / 100_000_000.0)
+            format!("{:.2}Y", num / 100_000_000.0)
         }
         _ if *num == 0.0 => " - ".to_string(),
         _ => {
-            format!("{:.2}万", num / 10_000.0)
+            format!("{:.2}W", num / 10_000.0)
         }
     }
 }
