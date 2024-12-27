@@ -8,6 +8,7 @@ use anyhow::{bail, Result};
 use crossterm::{cursor, style::Stylize, terminal, terminal::ClearType, ExecutableCommand};
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
+use pinyin::{ToPinyin, ToPinyinMulti};
 use rains::{
     cli::{Opts, Subcommand},
     invest::{quote::Quote, Exchange, Investment, Market},
@@ -328,14 +329,23 @@ fn write_quote(quote: &Quote) {
     let volume =
         if Regex::new("HK([A-Z]{3})").unwrap().is_match(&quote.symbol) { quote.volume * 1000.0 } else { quote.volume };
 
+    let first_letter_name = quote
+        .name
+        .as_str()
+        .to_pinyin()
+        .filter_map(|c| match c {
+            Some(pinyin) => Some(pinyin.first_letter().to_uppercase()),
+            _ => None,
+        })
+        .collect::<String>();
     println!(
-        "{} {}  {:<8}  {:<16} \t昨收：{:.2}\t今开：{:.2}\t最高：{:.2}\t最低：{:.2}\t成交量：{:<8}\t成交额：{:<8}\t{}",
+        "{} {}  {:<8}  {:<16} \tPC：{:.2}\tOP：{:.2}\tHP：{:.2}\tLP：{:.2}\tVOL：{:<8}\tAMOUNT：{:<8}\t{}",
         quote.date,
         quote.time,
         quote.symbol,
         match rate {
-            _ if rate > 0.0 => now.red(),
-            _ if rate < 0.0 => now.green(),
+            _ if rate > 0.0 => now.yellow(),
+            _ if rate < 0.0 => now.blue(),
             _ => now.dark_grey(),
         }
         .bold()
@@ -346,7 +356,7 @@ fn write_quote(quote: &Quote) {
         quote.low,
         fmt_num(&quote.turnover),
         fmt_num(&volume),
-        quote.name,
+        first_letter_name,
     );
 }
 
