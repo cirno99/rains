@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    needs: [ clippy-fmt-test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            args: --best
+            strip: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: .exe
+            args: -9
+            strip: false
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            args: --best --lzma
+            strip: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+          toolchain: nightly
+          profile: minimal
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Compress bianry
+        uses: svenstaro/upx-action@v2
+        with:
+          file: target/${{ matrix.target }}/release/rains${{ matrix.ext }}
+          args: ${{ matrix.args }}
+          strip: ${{ matrix.strip }}
+
+      - name: Upload bianry
+        uses: actions/upload-artifact@v2
+        with:
+          name: rains-${{ matrix.target }}${{ matrix.ext }}
+          path: target/${{ matrix.target }}/release/rains${{ matrix.ext }}
+
+  build-musl:
+    name: Build x86_64-unknown-linux-musl
+    needs: [ clippy-fmt-test ]
+    runs-on: ubuntu-latest
+    container: clux/muslrust:stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          ln -s /root/.cargo $HOME/.cargo
+          ln -s /root/.rustup $HOME/.rustup
+          cargo build --release
+
+      - name: Compress bianry
+        uses: svenstaro/upx-action@v2
+        with:
+          file: target/x86_64-unknown-linux-musl/release/rains
+          args: --best --lzma
+          strip: true
+
+      - name: Upload bianry
+        uses: actions/upload-artifact@v2
+        with:
+          name: rains-x86_64-unknown-linux-musl
+          path: target/x86_64-unknown-linux-musl/release/rains
+
+  clippy-fmt-test:
+    name: Clippy rustfmt test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
+
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+      - name: Fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: -- --check
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
