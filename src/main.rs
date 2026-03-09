@@ -339,9 +339,7 @@ fn write_quote(quote: &Quote) {
         })
         .collect::<String>();
     println!(
-        "{} {}  {:<8}  {:<16} \t昨收：{:.2}\t今开：{:.2}\t最高：{:.2}\t最低：{:.2}\t成交量：{:<8}\t成交额：{:<8}\t{}",
-        quote.date,
-        quote.time,
+        "{:<8}  {:<16} \t成交量：{:<8}\t成交额：{:<8}\t{}",
         quote.symbol,
         match rate {
             _ if rate > 0.0 => now.yellow(),
@@ -350,10 +348,6 @@ fn write_quote(quote: &Quote) {
         }
         .bold()
         .underline(crossterm::style::Color::Blue),
-        quote.close,
-        quote.open,
-        quote.high,
-        quote.low,
         fmt_num(&quote.turnover),
         fmt_num(&volume),
         quote.name,
