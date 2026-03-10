@@ -449,7 +449,7 @@ impl Sina {
 
     /// 多个时连接时返回所有 之后单个返回
     pub async fn quotes_ws(symbols: &str, handler: impl Fn(Vec<Quote>)) -> Result<()> {
-        let uri = format!("ws://hq.sinajs.cn/wskt?list={}", fmt_quote_symbols(symbols));
+        let uri = format!("wss://hq.sinajs.cn/wskt?list={}", fmt_quote_symbols(symbols));
         let mut req = uri.into_client_request()?;
         req.headers_mut().insert(header::ORIGIN.as_str(), PORTAL.parse()?);
         let (ws, _) = connect_async(req).await?;
